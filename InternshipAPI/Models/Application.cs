@@ -1,7 +1,11 @@
-﻿namespace InternshipAPI.Models
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace InternshipAPI.Models
 {
     public class Application
     {
+        [Key]
         public int ApplicationID { get; set; }
         public DateTime ApplicationDate { get; set; }
         public string PositionTitle { get; set; } = string.Empty;
