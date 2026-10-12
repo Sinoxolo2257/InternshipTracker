@@ -33,8 +33,24 @@ namespace InternshipAPI.Migrations
                     b.Property<DateTime>("ApplicationDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("ApplicationLink")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ApplicationType")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CloseDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<int>("CompanyID")
                         .HasColumnType("int");
+
+                    b.Property<string>("Notes")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("OpenDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("PortalLink")
                         .IsRequired()
@@ -47,7 +63,13 @@ namespace InternshipAPI.Migrations
                     b.Property<int>("StatusID")
                         .HasColumnType("int");
 
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<int>("UserID")
+                        .HasColumnType("int");
+
+                    b.Property<int>("VersionID")
                         .HasColumnType("int");
 
                     b.HasKey("ApplicationID");
@@ -57,6 +79,8 @@ namespace InternshipAPI.Migrations
                     b.HasIndex("StatusID");
 
                     b.HasIndex("UserID");
+
+                    b.HasIndex("VersionID");
 
                     b.ToTable("Applications");
                 });
@@ -76,6 +100,62 @@ namespace InternshipAPI.Migrations
                     b.HasKey("StatusID");
 
                     b.ToTable("ApplicationStatuses");
+
+                    b.HasData(
+                        new
+                        {
+                            StatusID = 1,
+                            StatusDescription = "Applied"
+                        },
+                        new
+                        {
+                            StatusID = 2,
+                            StatusDescription = "In Review"
+                        },
+                        new
+                        {
+                            StatusID = 3,
+                            StatusDescription = "Interview Scheduled"
+                        },
+                        new
+                        {
+                            StatusID = 4,
+                            StatusDescription = "Offered"
+                        },
+                        new
+                        {
+                            StatusID = 5,
+                            StatusDescription = "Rejected"
+                        },
+                        new
+                        {
+                            StatusID = 6,
+                            StatusDescription = "Withdrawn"
+                        });
+                });
+
+            modelBuilder.Entity("InternshipAPI.Models.CVDoc", b =>
+                {
+                    b.Property<int>("VersionID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("VersionID"));
+
+                    b.Property<bool>("DocIsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("VersionName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("VersionUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("VersionID");
+
+                    b.ToTable("CVDocs");
                 });
 
             modelBuilder.Entity("InternshipAPI.Models.Company", b =>
@@ -95,6 +175,13 @@ namespace InternshipAPI.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Industry")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsWishlisted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Location")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -123,7 +210,7 @@ namespace InternshipAPI.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Password")
+                    b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -156,7 +243,15 @@ namespace InternshipAPI.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("InternshipAPI.Models.CVDoc", "CVDoc")
+                        .WithMany("Applications")
+                        .HasForeignKey("VersionID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("ApplicationStatus");
+
+                    b.Navigation("CVDoc");
 
                     b.Navigation("Company");
 
@@ -164,6 +259,11 @@ namespace InternshipAPI.Migrations
                 });
 
             modelBuilder.Entity("InternshipAPI.Models.ApplicationStatus", b =>
+                {
+                    b.Navigation("Applications");
+                });
+
+            modelBuilder.Entity("InternshipAPI.Models.CVDoc", b =>
                 {
                     b.Navigation("Applications");
                 });
