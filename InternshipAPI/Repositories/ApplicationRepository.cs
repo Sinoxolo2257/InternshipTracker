@@ -8,6 +8,7 @@ namespace InternshipAPI.Repositories
 {
     public class ApplicationRepository : IApplicationRepository
     {
+        private const int SavedStatusId = 1;   // "Saved" in the seed data
         private readonly ApplicationDbContext _context;
 
         public ApplicationRepository(ApplicationDbContext context)
@@ -15,40 +16,82 @@ namespace InternshipAPI.Repositories
             _context = context;
         }
 
+        //reusable query to get applications for a specific user, including related entities
+        private IQueryable<Application> ApplicationsFor(int userId) =>
+            _context.Applications
+                .Include(a => a.Listing).ThenInclude(l => l!.Company)
+                .Include(a => a.ApplicationStatus)
+                .Where(a => a.UserID == userId);
+
         //Application CRUD operations
-        public async Task<IEnumerable<Application>> GetAllApplications()
+        public async Task<IEnumerable<Application>> GetAllApplications(int userId)
         {
-            return await _context.Applications.ToListAsync();
+            return await ApplicationsFor(userId).OrderBy(a => a.Listing!.ClosingDate).ToListAsync();
         }
 
-        public async Task<Application?> GetApplicationById(int id)
-        {
-            return await _context.Applications.FindAsync(id);
+        public async Task<IEnumerable<Application>> GetApplicationsByStatus(int statusId, int userId) 
+        { 
+            return await ApplicationsFor(userId)
+            .Where(a => a.StatusID == statusId)
+            .OrderBy(a => a.Listing!.ClosingDate)
+            .ToListAsync();
         }
 
-        public async Task<Application?> GetApplicationByCompanyId(int companyId)
+        public async Task<Application?> GetApplicationById(int id, int userId)
         {
-            return await _context.Applications.FirstOrDefaultAsync(a => a.CompanyID == companyId);
+            return await ApplicationsFor(userId).FirstOrDefaultAsync(a => a.ApplicationID == id);
+        }
+
+        public async Task<IEnumerable<Application>> GetApplicationsByCompany(int companyId, int userId) =>
+            await ApplicationsFor(userId)
+                .Where(a => a.Listing!.CompanyID == companyId)
+                .ToListAsync();
+
+        public async Task<bool> ApplicationExists(int listingId, int userId) 
+        { 
+            return await _context.Applications.AnyAsync(a => a.ListingID == listingId && a.UserID == userId); 
         }
 
         public async Task<Application?> UpdateApplication(Application application)
         {
-            var existingApplication = await _context.Applications.FindAsync(application.ApplicationID);
+            var existingApplication = await _context.Applications.FirstOrDefaultAsync(a =>
+                 a.ApplicationID == application.ApplicationID && a.UserID == application.UserID);
             if (existingApplication == null) return null;
 
             existingApplication.StatusID = application.StatusID;
+            existingApplication.VersionID = application.VersionID;
+            existingApplication.SubmittedDate = application.SubmittedDate;
+            existingApplication.PortalLink = application.PortalLink;
             existingApplication.Notes = application.Notes;
-            existingApplication.ApplicationLink = application.ApplicationLink;
+            existingApplication.UpdatedAt = application.UpdatedAt;
             await _context.SaveChangesAsync();
-            return existingApplication;
+            return await GetApplicationById(existingApplication.ApplicationID, existingApplication.UserID);
         }
 
         public async Task<Application> AddApplication(Application application)
         {
             _context.Applications.Add(application);
             await _context.SaveChangesAsync();
-            return application;
+            return (await GetApplicationById(application.ApplicationID, application.UserID))!;
         }
+
+        public async Task<IEnumerable<Application>> GetClosingSoon(int userId, int days)
+        {
+            var today = DateTime.Today;
+            var until = today.AddDays(days);
+            return await ApplicationsFor(userId)
+                .Where(a => a.StatusID == SavedStatusId
+                         && a.Listing!.ClosingDate >= today && a.Listing.ClosingDate <= until)
+                .OrderBy(a => a.Listing!.ClosingDate)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Application>> GetOverdue(int userId) =>
+            await ApplicationsFor(userId)
+                .Where(a => a.StatusID == SavedStatusId && a.Listing!.ClosingDate < DateTime.Today)
+                .OrderBy(a => a.Listing!.ClosingDate)
+                .ToListAsync();
+
 
         //ApplicationStatus CRUD operations
         public async Task<IEnumerable<ApplicationStatus>> GetAllStatuses()
@@ -63,9 +106,10 @@ namespace InternshipAPI.Repositories
 
 
         //Company CRUD operations
-        public async Task<IEnumerable<Company>> GetAllCompanies()
+        public async Task<IEnumerable<Company>> GetAllCompanies(int userId)
         {
-            return await _context.Companies.ToListAsync();
+            return await _context.Companies.Where(c => c.UserID == userId)
+                .OrderBy(c => c.CompanyName).ToListAsync();
         }
 
         public async Task<Company> AddCompany(Company company)
@@ -75,14 +119,17 @@ namespace InternshipAPI.Repositories
             return company;
         }
 
-        public async Task<Company?> GetCompanyById(int companyId)
+        public async Task<Company?> GetCompanyById(int companyId, int userId)
         {
-            return await _context.Companies.FindAsync(companyId);
+            return await _context.Companies.FirstOrDefaultAsync(c => c.CompanyID == companyId && c.UserID == userId); ;
         }
+
+        public async Task<bool> CompanyExists(string name, int userId) =>
+            await _context.Companies.AnyAsync(c => c.UserID == userId && c.CompanyName == name);
 
         public async Task<Company?> UpdateCompany(Company company)
         {
-            var existingCompany = await _context.Companies.FindAsync(company.CompanyID);
+            var existingCompany = await GetCompanyById(company.CompanyID, company.UserID);
             if (existingCompany == null)
             {
                 return null;
@@ -91,8 +138,48 @@ namespace InternshipAPI.Repositories
             existingCompany.CompanyName = company.CompanyName;
             existingCompany.Industry = company.Industry;
             existingCompany.CompanyDescription = company.CompanyDescription;
+            existingCompany.IsWishlisted = company.IsWishlisted;
             await _context.SaveChangesAsync();
             return existingCompany;
+        }
+
+        //Listing CRUD operations
+        public async Task<IEnumerable<Listing>> GetAllListings(int userId)
+        {
+            return await _context.Listings.Include(l => l.Company)
+                .Where(l => l.UserID == userId)
+                .OrderBy(l => l.ClosingDate).ToListAsync();
+        }
+
+        public async Task<Listing?> GetListingById(int listingId, int userId)
+        {
+            return await _context.Listings.Include(l => l.Company)
+                .FirstOrDefaultAsync(l => l.ListingID == listingId && l.UserID == userId);
+        }
+
+        public async Task<Listing> AddListing(Listing listing)
+        {
+            _context.Listings.Add(listing);
+            await _context.SaveChangesAsync();
+            return (await GetListingById(listing.ListingID, listing.UserID))!;
+        }
+
+        public async Task<Listing?> UpdateListing(Listing listing)
+        {
+            var existing = await GetListingById(listing.ListingID, listing.UserID);
+            if (existing == null) return null;
+
+            existing.CompanyID = listing.CompanyID;
+            existing.Title = listing.Title;
+            existing.Type = listing.Type;
+            existing.Location = listing.Location;
+            existing.DatePosted = listing.DatePosted;
+            existing.ClosingDate = listing.ClosingDate;
+            existing.Requirements = listing.Requirements;
+            existing.Description = listing.Description;
+            existing.ApplicationLink = listing.ApplicationLink;
+            await _context.SaveChangesAsync();
+            return await GetListingById(existing.ListingID, existing.UserID);
         }
 
 
@@ -108,9 +195,9 @@ namespace InternshipAPI.Repositories
 
         }
 
-        public async Task<User> AddUser(User user)
+        public async Task<User> AddUser(User user, string password)
         {
-            user.PasswordHash= BCrypt.Net.BCrypt.HashPassword(user.Password);
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(password);
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
             return user;
@@ -126,14 +213,14 @@ namespace InternshipAPI.Repositories
         }
 
         //CvDoc CRUD operations
-        public async Task<IEnumerable<CVDoc>> GetAllCVs()
+        public async Task<IEnumerable<CVDoc>> GetAllCVs(int userId)
         {
-            return await _context.CVDocs.ToListAsync();
+            return await _context.CVDocs.Where(v => v.UserID == userId && v.DocIsActive).ToListAsync();
         }
 
-        public async Task<CVDoc?> GetCVById(int versionId)
+        public async Task<CVDoc?> GetCVById(int versionId, int userId)
         {
-            return await _context.CVDocs.FindAsync(versionId);
+            return await _context.CVDocs.FirstOrDefaultAsync(v => v.VersionID == versionId && v.UserID == userId);
         }
 
         public async Task<CVDoc> AddCVDoc(CVDoc cvDoc)

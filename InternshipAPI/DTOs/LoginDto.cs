@@ -1,4 +1,6 @@
-﻿namespace InternshipAPI.DTOs
+﻿using InternshipAPI.Models;
+
+namespace InternshipAPI.DTOs
 {
     public class LoginDto
     {

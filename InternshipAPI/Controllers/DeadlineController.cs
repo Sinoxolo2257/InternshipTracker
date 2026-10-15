@@ -1,44 +1,33 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using InternshipAPI.Models;
-using InternshipAPI.Data;
-using Microsoft.EntityFrameworkCore;
+﻿using InternshipAPI.DTOs;
+using InternshipAPI.Extensions;
+using InternshipAPI.Repositories;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using static InternshipAPI.DTOs.ResponseDtos;
 
 namespace InternshipAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class DeadlineController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IApplicationRepository _repository;
 
-        public DeadlineController (ApplicationDbContext context)
-        {
-            _context = context;
-        }
+        public DeadlineController(IApplicationRepository repository) => _repository = repository;
 
         [HttpGet("closing-soon")]
-        public async Task<IActionResult> GetClosingSoon()
+        public async Task<ActionResult<IEnumerable<ApplicationResponseDto>>> GetClosingSoon([FromQuery] int days = 7)
         {
-            var today = DateTime.Today;
-            var in7days = today.AddDays(7);
-
-            var closing = await _context.Applications
-                .Where(a => a.CloseDate >= today && a.CloseDate <= in7days)
-                .OrderBy(a => a.CloseDate)
-                .ToListAsync();
-            return Ok(closing);
+            var apps = await _repository.GetClosingSoon(User.GetUserId(), days);
+            return Ok(apps.Select(ApplicationResponseDto.From));
         }
 
         [HttpGet("overdue")]
-        public async Task<IActionResult> GetOverdue()
+        public async Task<ActionResult<IEnumerable<ApplicationResponseDto>>> GetOverdue()
         {
-            var today = DateTime.Today;
-
-            var overdue = await _context.Applications
-                .Where(a => a.CloseDate < today)
-                .OrderBy(a => a.CloseDate)
-                .ToListAsync();
-            return Ok(overdue);
+            var apps = await _repository.GetOverdue(User.GetUserId());
+            return Ok(apps.Select(ApplicationResponseDto.From));
         }
     }
 }

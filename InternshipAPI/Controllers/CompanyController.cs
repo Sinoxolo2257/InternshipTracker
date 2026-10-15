@@ -1,69 +1,73 @@
-﻿using Microsoft.EntityFrameworkCore;
-using InternshipAPI.Repositories;
-using Microsoft.AspNetCore.Mvc;
+﻿using InternshipAPI.DTOs;
+using InternshipAPI.Extensions;
 using InternshipAPI.Models;
-using InternshipAPI.DTOs;
+using InternshipAPI.Repositories;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using static InternshipAPI.DTOs.ResponseDtos;
 
 namespace InternshipAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class CompanyController: ControllerBase
+    [Authorize]
+    public class CompanyController : ControllerBase
     {
         private readonly IApplicationRepository _repository;
 
-        public CompanyController(IApplicationRepository repository)
-        {
-            _repository = repository;
-        }
+        public CompanyController(IApplicationRepository repository) => _repository = repository;
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Company>>> GetAllCompanies()
+        public async Task<ActionResult<IEnumerable<CompanyResponseDto>>> GetAllCompanies()
         {
-            return Ok(await _repository.GetAllCompanies());
+            var companies = await _repository.GetAllCompanies(User.GetUserId());
+            return Ok(companies.Select(CompanyResponseDto.From));
         }
-
-        [HttpGet("id")]
-        public async Task<ActionResult<Company?>> GetCompanyById(int id)
+        
+        [HttpGet("{id}")]
+        public async Task<ActionResult<CompanyResponseDto>> GetCompanyById(int id)
         {
-            var company = await _repository.GetCompanyById(id);
+            var company = await _repository.GetCompanyById(id, User.GetUserId());
             if (company == null) return NotFound();
-            return Ok(company);
+            return Ok(CompanyResponseDto.From(company));
         }
 
         [HttpPost]
-        public async Task<ActionResult<Company>> AddCompany(CompanyDto dto)
+        public async Task<ActionResult<CompanyResponseDto>> AddCompany(CompanyDto dto)
         {
-            var company = new Company
+            var userId = User.GetUserId();
+            var name = dto.CompanyName.Trim();
+
+            if (string.IsNullOrWhiteSpace(name)) return BadRequest("Company name is required.");
+            if (await _repository.CompanyExists(name, userId))
+                return Conflict("You already have a company with this name.");
+
+            var created = await _repository.AddCompany(new Company
             {
-                CompanyName = dto.CompanyName,
+                UserID = userId,
+                CompanyName = name,
                 Industry = dto.Industry,
                 CompanyDescription = dto.CompanyDescription,
-                Location = dto.Location,
                 IsWishlisted = dto.IsWishlisted
-            };
-
-            var newCompany = await _repository.AddCompany(company);
-            return CreatedAtAction(nameof(GetCompanyById), new { id = newCompany.CompanyID }, newCompany);
+            });
+            return CreatedAtAction(nameof(GetCompanyById), new { id = created.CompanyID },
+                CompanyResponseDto.From(created));
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateCompany(int id, CompanyDto dto)
+        public async Task<ActionResult<CompanyResponseDto>> UpdateCompany(int id, CompanyDto dto)
         {
-            var company = new Company
+            var updated = await _repository.UpdateCompany(new Company
             {
                 CompanyID = id,
-                CompanyName = dto.CompanyName,
+                UserID = User.GetUserId(),
+                CompanyName = dto.CompanyName.Trim(),
                 Industry = dto.Industry,
                 CompanyDescription = dto.CompanyDescription,
-                Location = dto.Location,
                 IsWishlisted = dto.IsWishlisted
-            };
-
-            if (id != company.CompanyID) return BadRequest();
-            var updateCompany = await _repository.UpdateCompany(company);
-            if (updateCompany == null) return NotFound();
-            return Ok(updateCompany);
+            });
+            if (updated == null) return NotFound();
+            return Ok(CompanyResponseDto.From(updated));
         }
     }
 }
