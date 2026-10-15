@@ -6,7 +6,7 @@ namespace InternshipAPI.DTOs
     {
         public int CompanyID { get; set; }
         public string Title { get; set; } = string.Empty;
-        public ApplicationType Type { get; set; }
+        public ListingType Type { get; set; }
         public string? Location { get; set; }
         public DateTime? OpenDate { get; set; }
         public DateTime CloseDate { get; set; }
@@ -14,4 +14,5 @@ namespace InternshipAPI.DTOs
         public string? Description { get; set; }
         public string? ApplicationLink { get; set; }
     }
+
 }
