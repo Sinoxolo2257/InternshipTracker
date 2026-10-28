@@ -1,29 +1,32 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { Document } from '../Models/Document';
+import { environment } from '../../environments/environment';
+import { Cv } from '../Models/models';
 
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable({ providedIn: 'root' })
 export class DocumentService {
-  private apiUrl='https://localhost:7128/api/Docs';
+  private http = inject(HttpClient);
+  private url = `${environment.apiUrl}/docs`;
 
-  constructor(private http: HttpClient){}
+  getAll() { return this.http.get<Document[]>(this.url); }
 
-  getDocuments(): Observable<Document[]>{
-    return this.http.get<Document[]>(this.apiUrl);
+  upload(versionName: string, file: File) {
+    const form = new FormData();
+    form.append('versionName', versionName);
+    form.append('file', file);
+    return this.http.post<Document>(this.url, form);
   }
 
-  getDocumentById(id:number): Observable<Document>{
-    return this.http.get<Document>(`${this.apiUrl}/${id}`);
-  }
+  archive(id: number) { return this.http.patch<Document>(`${this.url}/${id}/archive`, {}); }
 
-  addDocument(document:Document): Observable<Document>{
-    return this.http.post<Document>(this.apiUrl,document);
-  }
-
-  archiveDocument(id:number, ): Observable<Document>{
-    return this.http.patch<Document>(`${this.apiUrl}/${id}`, null);
+  download(cv: Cv) {
+    this.http.get(`${this.url}/${cv.versionID}/download`, { responseType: 'blob' })
+      .subscribe(blob => {
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = cv.originalFileName;
+        link.click();
+        URL.revokeObjectURL(link.href);
+      });
   }
 }

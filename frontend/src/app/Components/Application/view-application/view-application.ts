@@ -4,8 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { ApplicationService } from '../../../Services/application-service';
-import { Application } from '../../../Models/Application';
-
+import { Application, ApplicationRequest } from '../../../Models/models';
 
 @Component({
   selector: 'app-view-application',
@@ -30,7 +29,7 @@ export class ViewApplication implements OnInit {
   }
 
   loadAllApplications():void{
-    this.applicationService.getAllApplication().subscribe(data=>this.applications=data);
+    this.applicationService.getAll().subscribe(data=>this.applications=data);
   }
 
 }

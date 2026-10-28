@@ -26,4 +26,13 @@
       }
     </ul>
   </nav>
+  <div class="mt-auto p-3">
+    <button type="button" (click)="auth.logout()"
+      class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100">
+      <svg [lucideIcon]="logoutIcon" class="size-5 shrink-0"></svg>
+      @if (!isCollapsed) {
+        <span class="whitespace-nowrap">Log out</span>
+      }
+    </button>
+  </div>
 </div>

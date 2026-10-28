@@ -1,32 +1,15 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { CompanyDto } from '../DTOs/CompanyDto';
-import { Company } from '../Models/Company';
+import { environment } from '../../environments/environment';
+import { Company, CompanyRequest } from '../Models/models';
 
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable({ providedIn: 'root' })
 export class CompanyService {
+  private http = inject(HttpClient);
+  private url = `${environment.apiUrl}/company`;
 
-  private apiUrl='https://localhost:7128/api/company';
-
-  constructor(private http:HttpClient){}
-
-  getAllCompanies(): Observable<Company[]>{
-    return this.http.get<Company[]>(this.apiUrl);
-  }
-
-  getCompanyById(id:number): Observable<Company>{
-    return this.http.get<Company>(`${this.apiUrl}/${id}`);
-  }
-
-  addCompany(company:CompanyDto):Observable<Company>{
-    return this.http.post<Company>(this.apiUrl,company);
-  }
-
-  updateCompany(id:number, company:CompanyDto): Observable<Company>{
-    return this.http.put<Company>(`${this.apiUrl}/${id}`,company);
-  }
-
+  getAll() { return this.http.get<Company[]>(this.url); }
+  getById(id: number) { return this.http.get<Company>(`${this.url}/${id}`); }
+  create(c: CompanyRequest) { return this.http.post<Company>(this.url, c); }
+  update(id: number, c: CompanyRequest) { return this.http.put<Company>(`${this.url}/${id}`, c); }
 }

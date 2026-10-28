@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import { LucideDynamicIcon, LucideHouse, LucideFileUser, LucideBuildingComplex, LucideSettings, LucideListCollapse} from '@lucide/angular';
+import { AuthService } from '../../Services/auth-service';
+import { LucideDynamicIcon, LucideHouse, LucideFileUser, LucideBuildingComplex, LucideSettings, LucideListCollapse, LucideLogOut } from '@lucide/angular';
 
 @Component({
   selector: 'app-navbar',
@@ -11,6 +12,8 @@ import { LucideDynamicIcon, LucideHouse, LucideFileUser, LucideBuildingComplex, 
 export class Navbar {
   isCollapsed = false;
   toggleIcon = LucideListCollapse;
+  auth=inject(AuthService);
+  logoutIcon = LucideLogOut;
 
   navbarItems = [
     { label: 'Dashboard', route: 'dashboard', icon: LucideHouse },
