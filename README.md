@@ -2,58 +2,71 @@
 
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.2.
 
-## Development server
 
-To start a local development server, run:
+A full-stack application in development to help students organise and track their internship, bursary, grad or work applications.
 
-```bash
-ng serve
-```
+## Overview
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+Searching and applying for anything can involve managing multiple companies, application details and recruitment stages. InternshipTracker aims to bring this information into one organised application.
 
-## Code scaffolding
+This personal project is an opportunity to apply software development and systems analysis skills to a practical problem faced by students entering the job market.
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+## Project Status
 
-```bash
-ng generate component component-name
-```
+**In development** - the frontend, backend, database integration and authentication are being developed and refined.
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## Technology Stack
 
-```bash
-ng generate --help
-```
+- **Frontend:** Angular
+- **Backend:** C# / ASP.NET Core Web API
+- **Database:** Integrated database (specific technology to be documented)
+- **Authentication:** Implemented; authentication flow and security details to be documented
 
-## Building
+## Current Functionality
 
-To build the project run:
+This section will describe verified functionality, including:
 
-```bash
-ng build
-```
+- User authentication
+- Database integration
+- Internship application management 
+- Application status tracking
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+## Architecture
 
-## Running unit tests
+The application is organised into a frontend and backend:
 
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+- **Angular frontend:** Provides the user interface.
+- **ASP.NET Core API:** Handles backend operations and communication with the frontend.
+- **Database:** Persists application data.
+- **Authentication:** Supports user sign-in.
 
-```bash
-ng test
-```
+### Frontend
 
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
+From the repository root:
 
 ```bash
-ng e2e
+npm install
+npx ng serve
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+Open `http://localhost:4200/` in your browser.
 
-## Additional Resources
+### Backend
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Open `InternshipAPI.slnx` in a compatible version of Visual Studio, or use the .NET CLI from the backend project directory.
+
+Configure the required database connection and authentication settings before running the API. Exact startup instructions will be added after verifying the backend configuration.
+
+## Development Priorities
+
+- Document application requirements and user workflows.
+- Refine validation and error handling.
+- Test authentication and protected operations.
+- Improve automated test coverage.
+- Document the database structure and API endpoints.
+
+## About the Developer
+
+I'm a final-year BCom Information Systems student at the University of Pretoria, interested in Business Analysis and software development.
+
+This project demonstrates my interest in understanding practical problems, analysing system requirements and developing technical solutions.
