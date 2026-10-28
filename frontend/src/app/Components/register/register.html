@@ -1,0 +1,49 @@
+<div class="flex min-h-screen items-center justify-center bg-gray-100 p-4">
+  <form [formGroup]="form" (ngSubmit)="submit()"
+        class="w-full max-w-sm rounded-lg bg-white p-8 shadow-sm">
+    <h1 class="mb-6 text-2xl font-semibold text-gray-800">Create account</h1>
+
+    @if (error()) {
+      <p class="mb-4 rounded bg-red-50 px-3 py-2 text-sm text-red-600">{{ error() }}</p>
+    }
+
+    <div class="mb-4 flex gap-3">
+      <div class="flex-1">
+        <label class="mb-1 block text-sm text-gray-600" for="name">Name</label>
+        <input id="name" type="text" formControlName="name" autocomplete="given-name"
+               class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none" />
+      </div>
+      <div class="flex-1">
+        <label class="mb-1 block text-sm text-gray-600" for="surname">Surname</label>
+        <input id="surname" type="text" formControlName="surname" autocomplete="family-name"
+               class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none" />
+      </div>
+    </div>
+
+    <label class="mb-1 block text-sm text-gray-600" for="email">Email</label>
+    <input id="email" type="email" formControlName="emailAddress" autocomplete="email"
+           class="mb-4 w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none" />
+
+    <label class="mb-1 block text-sm text-gray-600" for="password">Password</label>
+    <input id="password" type="password" formControlName="password" autocomplete="new-password"
+           class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none" />
+    <p class="mb-4 mt-1 text-xs text-gray-500">At least 8 characters.</p>
+
+    <label class="mb-1 block text-sm text-gray-600" for="confirm">Confirm password</label>
+    <input id="confirm" type="password" formControlName="confirmPassword" autocomplete="new-password"
+           class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none" />
+    @if (form.hasError('mismatch') && form.controls.confirmPassword.touched) {
+      <p class="mt-1 text-xs text-red-600">Passwords don't match.</p>
+    }
+
+    <button type="submit" [disabled]="form.invalid || loading()"
+            class="mt-6 w-full rounded-lg bg-blue-600 py-2 font-medium text-white hover:bg-blue-700 disabled:opacity-50">
+      {{ loading() ? 'Creating account...' : 'Create account' }}
+    </button>
+
+    <p class="mt-4 text-center text-sm text-gray-600">
+      Already have an account?
+      <a routerLink="/login" class="text-blue-600 hover:underline">Sign in</a>
+    </p>
+  </form>
+</div>
