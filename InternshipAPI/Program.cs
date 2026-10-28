@@ -61,8 +61,8 @@ builder.Services.AddSwaggerGen(options =>
 
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        Description = "JWT Authorisation. Example: Bearer eyJhbGciOiJIUzI1NiIs.",
-        Name = "Authorisation",
+        Description = "JWT Authorisation. Example: eyJhbGciOiJIUzI1NiIs.",
+        Name = "Authorization",
         In = ParameterLocation.Header,
         Type= SecuritySchemeType.Http,
         Scheme= "bearer",
@@ -97,6 +97,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseCors("AllowAll");
+app.UseAuthentication();
 
 app.UseAuthorization();
 

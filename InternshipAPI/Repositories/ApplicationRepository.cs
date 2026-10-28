@@ -3,6 +3,7 @@ using InternshipAPI.Models;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using BCrypt.Net;
+using Microsoft.AspNetCore.Identity;
 
 namespace InternshipAPI.Repositories
 {
@@ -207,8 +208,18 @@ namespace InternshipAPI.Repositories
         {
             var user = await _context.Users.FindAsync(userId);
             if (user == null) return null;
+            
+            await using var transaction = await _context.Database.BeginTransactionAsync();
+
+            await _context.Applications.Where(a => a.UserID == userId).ExecuteDeleteAsync();
+            await _context.Listings.Where(l => l.UserID == userId).ExecuteDeleteAsync();
+            await _context.CVDocs.Where(V => V.UserID == userId).ExecuteDeleteAsync();
+            await _context.Companies.Where(c => c.UserID == userId).ExecuteDeleteAsync();
+
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();
+
+            await transaction.CommitAsync();
             return user;
         }
 

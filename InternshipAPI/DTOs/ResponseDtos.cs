@@ -4,6 +4,12 @@ namespace InternshipAPI.DTOs
 {
     public class ResponseDtos
     {
+        public record UserResponseDto(int UserID, string Name, string Surname, string EmailAddress)
+        {
+            public static UserResponseDto From(User u) =>
+                new(u.UserID, u.Name, u.Surname, u.EmailAddress);
+        }
+
         public record CompanyResponseDto(
         int CompanyID, string CompanyName, string? Industry,
         string? CompanyDescription, bool IsWishlisted)
