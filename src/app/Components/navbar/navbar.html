@@ -1,0 +1,29 @@
+<div dir="ltr"
+     class="m-3 flex flex-col h-[calc(100vh-1.5rem)] rounded-lg bg-white text-gray-700 shadow-sm transition-[width] duration-300"
+     [class.w-64]="!isCollapsed" [class.w-20]="isCollapsed">
+
+  <div class="flex items-center gap-3 p-5 cursor-pointer" (click)="toggleNavbar()">
+    <svg [lucideIcon]="toggleIcon" class="size-6 shrink-0"></svg>
+    @if (!isCollapsed) {
+      <span class="font-semibold whitespace-nowrap">App Name</span>
+    }
+  </div>
+
+  <nav class="px-3">
+    <ul class="flex flex-col gap-1">
+      @for (link of navbarItems; track link.route) {
+        <li>
+          <a [routerLink]="link.route"
+             routerLinkActive="bg-gray-100 text-blue-600"
+             [routerLinkActiveOptions]="{ exact: true }"
+             class="flex flex-row items-center gap-3 rounded-lg px-3 py-2 hover:bg-gray-100">
+            <svg [lucideIcon]="link.icon" class="size-5 shrink-0"></svg>
+            @if (!isCollapsed) {
+              <span class="whitespace-nowrap">{{ link.label }}</span>
+            }
+          </a>
+        </li>
+      }
+    </ul>
+  </nav>
+</div>
