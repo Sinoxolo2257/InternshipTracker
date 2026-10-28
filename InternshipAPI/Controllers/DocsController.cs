@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using InternshipAPI.Models;
 using InternshipAPI.Repositories;
+using InternshipAPI.Extensions;
 
 namespace InternshipAPI.Controllers
 {
@@ -16,15 +17,15 @@ namespace InternshipAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<CVDoc>>> GetAllCvs()
+        public async Task<ActionResult<IEnumerable<CVDoc>>> GetAllCvs(int userId)
         {
-            return Ok(await _repository.GetAllCVs());
+            return Ok(await _repository.GetAllCVs(userId));
         }
 
         [HttpGet ("{id}")]
-        public async Task<ActionResult<CVDoc>> GetCVById(int id)
+        public async Task<ActionResult<CVDoc>> GetCVById(int versionId, int userId)
         { 
-            var cv = await _repository.GetCVById(id);
+            var cv = await _repository.GetCVById(versionId, userId);
             if (cv==null) return NotFound();
             return Ok(cv);
         }

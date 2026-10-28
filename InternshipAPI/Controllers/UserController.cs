@@ -1,7 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using InternshipAPI.Repositories;
+﻿using InternshipAPI.DTOs;
+using InternshipAPI.Extensions;
 using InternshipAPI.Models;
-using InternshipAPI.DTOs;
+using InternshipAPI.Repositories;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using static InternshipAPI.DTOs.ResponseDtos;
 
 namespace InternshipAPI.Controllers
 {
@@ -16,33 +19,41 @@ namespace InternshipAPI.Controllers
             _repository = repository;
         }
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<User>> GetUserById(int id)
+        [HttpGet("me")]
+        [Authorize]
+        public async Task<ActionResult<UserResponseDto>> GetCurrentUser()
         {
-            var user = await _repository.GetUserById(id);
+            var user = await _repository.GetUserById(User.GetUserId());
             if (user == null) return NotFound();
-            return Ok(user);
+            return Ok(UserResponseDto.From(user));
         }
 
         [HttpPost("register")]
-        public async Task<ActionResult<User>> AddUser(RegisterDto dto)
+        [AllowAnonymous]
+        public async Task<ActionResult<UserResponseDto>> AddUser(RegisterDto dto)
         {
+            var email= dto.EmailAddress.Trim();
+
+            if(await _repository.GetUserByEmail(email) != null)
+            {
+                return Conflict("Email address already in use.");
+            }
             var user= new User
             {
                 Name = dto.Name,
                 Surname = dto.Surname,
                 EmailAddress = dto.EmailAddress,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password)
             };
 
-            var newUser = await _repository.AddUser(user);
-            return CreatedAtAction(nameof(GetUserById), new { id = newUser.UserID }, newUser);
+            var newUser = await _repository.AddUser(user, dto.Password);
+            return CreatedAtAction(nameof(GetCurrentUser), new { id = newUser.UserID }, UserResponseDto.From(newUser));
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteAccount(int id)
+        [HttpDelete("me")]
+        [Authorize]
+        public async Task<IActionResult> DeleteAccount()
         {
-            var deletedUser = await _repository.DeleteAccount(id);
+            var deletedUser = await _repository.DeleteAccount(User.GetUserId());
             if (deletedUser == null) return NotFound();
             return NoContent();
         }
